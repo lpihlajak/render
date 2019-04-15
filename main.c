@@ -23,7 +23,14 @@ int main()
 
     while(iterator > 0)
     {
-        buffer[iterator] = iterator ^ (iterator/HEIGHT);
+        if(iterator % sizeof(pixel) == 0) 
+        {
+            buffer[iterator] = 0xFF000055;
+        }
+        else
+        {
+            buffer[iterator] = iterator ^ (iterator/HEIGHT);
+        }
         iterator--;
     } 
 
