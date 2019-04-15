@@ -1,12 +1,15 @@
 #include <stdio.h>
 #include <stdint.h>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+
 #include "stb_image_write.h"
 
 #define WIDTH 320
 #define HEIGHT 240
 
 uint8_t pixel[4];
-uint8_t buffer[320];
+uint8_t buffer[WIDTH*HEIGHT*sizeof(pixel)];
 
 int main()
 {
@@ -14,6 +17,15 @@ int main()
 
     int8_t ret;
     printf("hello");
+
+    uint32_t size = sizeof(buffer);
+    uint32_t iterator = size;
+
+    while(iterator > 0)
+    {
+        buffer[iterator] = iterator ^ (iterator/HEIGHT);
+        iterator--;
+    } 
 
     ret = stbi_write_bmp(file, WIDTH, HEIGHT, 1, &buffer);
 
