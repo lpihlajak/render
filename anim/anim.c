@@ -134,6 +134,16 @@ int main()
         int32_t xDelta = (meta[1].pos.x - meta[0].pos.x);
         int32_t yDelta = (meta[1].pos.y - meta[0].pos.y);
 
+        // TODO: Hack to fix behavior where both objects would shoot out to space when near each other..
+        if((abs(xDelta) < 5) && (abs(yDelta) < 5))
+        {
+            meta[0].v.x -= 0.02; 
+            meta[0].v.y -= 0.02; 
+            meta[1].v.x -= 0.02; 
+            meta[1].v.y -= 0.02; 
+            iter++; continue;
+        }
+
         int32_t i;
         int32_t j;
 
