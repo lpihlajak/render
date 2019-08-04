@@ -126,8 +126,12 @@ int main()
         int32_t i;
         int32_t j;
 
+        float gravity;
 
-        float gravity = metaCalc(xDelta, yDelta)*1000; // *1000 makes gravity 1 when overlapping
+        xDelta = (meta[1].pos.x - meta[0].pos.x);
+        yDelta = (meta[1].pos.y - meta[0].pos.y);
+
+        gravity = metaCalc(xDelta, yDelta)*1000; // *1000 makes gravity 1 when overlapping
 
         if(xDelta > 0)
             i = 1;
@@ -145,7 +149,30 @@ int main()
         meta[0].v.y += j*gravity; // calc speed
         meta[0].pos.y += meta[0].v.y; // calculate position
 
-        printf("\nv.x: %f, v.y: %f, i: %d, j: %d, Delta: %d yDelta: %d Gravity: %f", meta[0].v.x, meta[0].v.y, i, j, xDelta, yDelta, gravity);
+        printf("\nFIRST: v.x: %f, v.y: %f, i: %d, j: %d, xDelta: %d yDelta: %d Gravity: %f", meta[0].v.x, meta[0].v.y, i, j, xDelta, yDelta, gravity);
+
+        xDelta = (meta[0].pos.x - meta[1].pos.x);
+        yDelta = (meta[0].pos.y - meta[1].pos.y);
+
+        gravity = metaCalc(xDelta, yDelta)*1000; // *1000 makes gravity 1 when overlapping
+
+        if(xDelta > 0)
+            i = 1;
+        else
+            i = -1;
+
+        if(yDelta > 0)
+            j = 1;
+        else
+            j = -1;
+
+        meta[1].v.x += i*gravity; // calc speed
+        meta[1].pos.x += meta[1].v.x; // calculate position
+
+        meta[1].v.y += j*gravity; // calc speed
+        meta[1].pos.y += meta[1].v.y; // calculate position
+
+        printf("\nSECND: v.x: %f, v.y: %f, i: %d, j: %d, Delta: %d yDelta: %d Gravity: %f", meta[0].v.x, meta[0].v.y, i, j, xDelta, yDelta, gravity);
 
         iter++;
     }
