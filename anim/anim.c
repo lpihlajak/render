@@ -89,12 +89,12 @@ int main()
     meta[0].v.x = 1; 
     meta[0].v.y = 1; 
 
-    uint32_t i = 0;
+    uint32_t iter = 0;
 
     int8_t ret;
     printf("hello");
 
-    while(i< TOTAL_FRAMES)
+    while(iter < TOTAL_FRAMES)
     {
         clear(buffer);
 
@@ -113,7 +113,7 @@ int main()
             }
         }
 
-        snprintf(file, sizeof(char) * 32, "frames/image%i.png", i);
+        snprintf(file, sizeof(char) * 32, "frames/image%i.png", iter);
         printf("\nRendering frame %s", file);
         ret = stbi_write_png(file, WIDTH, HEIGHT, 4, &buffer, WIDTH*PIXELSIZE);
 
@@ -147,7 +147,7 @@ int main()
 
         printf("\nv.x: %f, v.y: %f, i: %d, j: %d, Delta: %d yDelta: %d Gravity: %f", meta[0].v.x, meta[0].v.y, i, j, xDelta, yDelta, gravity);
 
-        i++;
+        iter++;
     }
 
     if(ret !=0) {
