@@ -10,7 +10,7 @@
 
 #define PIXELSIZE 4
 
-#define TOTAL_FRAMES 2400
+#define TOTAL_FRAMES 600
 
 uint8_t buffer[WIDTH*HEIGHT*PIXELSIZE];
 
@@ -70,7 +70,9 @@ int main()
 {
     int8_t c;
 
-    float amplitude;
+    float amplitude1;
+    float amplitude2;
+    float amplitudeSum;
 
     char file[32];
 
@@ -79,15 +81,15 @@ int main()
 
     struct Meta meta[2];
 
-    meta[0].pos.x = 150;
-    meta[0].pos.y = 150;
-    meta[0].v.x = 1; 
-    meta[0].v.y = 1; 
+    meta[0].pos.x = 250;
+    meta[0].pos.y = 200;
+    meta[0].v.x = 0; 
+    meta[0].v.y = 0; 
 
-    meta[1].pos.x = 450;
-    meta[1].pos.y = 250;
-    meta[0].v.x = 1; 
-    meta[0].v.y = 1; 
+    meta[1].pos.x = 400;
+    meta[1].pos.y = 300;
+    meta[0].v.x = 0; 
+    meta[0].v.y = 0; 
 
     uint32_t iter = 0;
 
@@ -103,12 +105,20 @@ int main()
             for(x=0;x<WIDTH;x++)
             {
                 //setPixel(x,y,0xFF,0xFF,0x00,0xFF, buffer);
-                amplitude = metaCalc(x-meta[0].pos.x,y-meta[0].pos.y); 
-                amplitude = amplitude + metaCalc(x-meta[1].pos.x,y-meta[1].pos.y); 
+
+
+                amplitude1 = metaCalc(x-meta[0].pos.x,y-meta[0].pos.y); 
+                amplitude2 = metaCalc(x-meta[1].pos.x,y-meta[1].pos.y); 
+
+                amplitudeSum = amplitude1 + amplitude2;             
+    
                 //printf("\namplitude %f", amplitude);
-                if(amplitude > 0.000052)
+                if(amplitudeSum > 0.000052)
                 {
-                    setPixel(x,y,0x00,(uint8_t)((float)0xFF*amplitude*20000),0x00,0xFF, buffer);
+                    if(amplitude1 > amplitude2)
+                        setPixel(x,y,0x00,(uint8_t)((float)0xFF*amplitudeSum*20000),0x00,0xFF, buffer);
+                    else
+                        setPixel(x,y,0x00,0x00,(uint8_t)((float)0xFF*amplitudeSum*20000),0xFF, buffer);
                 }
             }
         }
@@ -130,8 +140,11 @@ int main()
 
         xDelta = (meta[1].pos.x - meta[0].pos.x);
         yDelta = (meta[1].pos.y - meta[0].pos.y);
+    
 
         gravity = metaCalc(xDelta, yDelta)*1000; // *1000 makes gravity 1 when overlapping
+        if(gravity > 1)
+            gravity = 1.0;
 
         if(xDelta > 0)
             i = 1;
@@ -149,12 +162,15 @@ int main()
         meta[0].v.y += j*gravity; // calc speed
         meta[0].pos.y += meta[0].v.y; // calculate position
 
-        printf("\nFIRST: v.x: %f, v.y: %f, i: %d, j: %d, xDelta: %d yDelta: %d Gravity: %f", meta[0].v.x, meta[0].v.y, i, j, xDelta, yDelta, gravity);
+        printf("\nX:%fY:%f v.x: %f, v.y: %f, i: %d, j: %d, xDelta: %d yDelta: %d Gravity: %f", meta[0].pos.x, meta[0].pos.y, meta[0].v.x, meta[0].v.y, i, j, xDelta, yDelta, gravity);
 
         xDelta = (meta[0].pos.x - meta[1].pos.x);
         yDelta = (meta[0].pos.y - meta[1].pos.y);
 
+
         gravity = metaCalc(xDelta, yDelta)*1000; // *1000 makes gravity 1 when overlapping
+        if(gravity > 1)
+            gravity = 1.0;
 
         if(xDelta > 0)
             i = 1;
@@ -172,7 +188,7 @@ int main()
         meta[1].v.y += j*gravity; // calc speed
         meta[1].pos.y += meta[1].v.y; // calculate position
 
-        printf("\nSECND: v.x: %f, v.y: %f, i: %d, j: %d, Delta: %d yDelta: %d Gravity: %f", meta[0].v.x, meta[0].v.y, i, j, xDelta, yDelta, gravity);
+        printf("\nX:%fY:%f v.x: %f, v.y: %f, i: %d, j: %d, Delta: %d yDelta: %d Gravity: %f", meta[1].pos.x, meta[1].pos.y, meta[1].v.x, meta[1].v.y, i, j, xDelta, yDelta, gravity);
 
         iter++;
     }
