@@ -12,6 +12,8 @@
 
 #define TOTAL_FRAMES 600
 
+#define COLOR_INTENSITY 2000
+
 uint8_t buffer[WIDTH*HEIGHT*PIXELSIZE];
 
 enum rgba {
@@ -93,6 +95,8 @@ int main()
 
     uint32_t iter = 0;
 
+    uint8_t color = 0;
+
     int8_t ret;
     printf("hello");
 
@@ -106,19 +110,16 @@ int main()
             {
                 //setPixel(x,y,0xFF,0xFF,0x00,0xFF, buffer);
 
-
                 amplitude1 = metaCalc(x-meta[0].pos.x,y-meta[0].pos.y); 
                 amplitude2 = metaCalc(x-meta[1].pos.x,y-meta[1].pos.y); 
 
                 amplitudeSum = amplitude1 + amplitude2;             
+
+                color = (uint8_t)((float)0xFF*amplitudeSum*20000);
     
-                //printf("\namplitude %f", amplitude);
                 if(amplitudeSum > 0.000052)
                 {
-                    if(amplitude1 > amplitude2)
-                        setPixel(x,y,0x00,(uint8_t)((float)0xFF*amplitudeSum*20000),0x00,0xFF, buffer);
-                    else
-                        setPixel(x,y,0x00,0x00,(uint8_t)((float)0xFF*amplitudeSum*20000),0xFF, buffer);
+                    setPixel(x,y,0x00,(uint8_t)((float)color*amplitude1*COLOR_INTENSITY),(uint8_t)((float)color*amplitude2*COLOR_INTENSITY),0xFF, buffer);
                 }
             }
         }
