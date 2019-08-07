@@ -10,9 +10,11 @@
 
 #define PIXELSIZE 4
 
-#define TOTAL_FRAMES 600
+#define TOTAL_FRAMES 2400
 
 #define COLOR_INTENSITY 2000
+
+#define GRAV_LIMIT 0.10
 
 uint8_t buffer[WIDTH*HEIGHT*PIXELSIZE];
 
@@ -52,15 +54,15 @@ void clear(uint8_t *buffer)
     }
 }
 
-double metaCalc(uint32_t x, uint32_t y)
+float metaCalc(uint32_t x, uint32_t y)
 {
     return (1.0 / (x*x + y*y)); 
 }
 // objects
 
 struct Vec2 {
-    double x;
-    double y;
+    float x;
+    float y;
 } Vec2;
 
 typedef struct Meta {
@@ -68,30 +70,94 @@ typedef struct Meta {
     struct Vec2 v;  // Velocity
 } Meta;
 
+void updateForces(struct Meta meta[3])
+{
+        uint32_t iter2 = 0;
+        uint32_t iter3 = 0;
+
+        int32_t xDelta;
+        int32_t yDelta;
+
+        while(iter2 < 3)
+        {
+            // vector calc
+            // P1P2 = (x2-x1)i + (y2-y1)j
+            
+            iter3 = 0; 
+            while(iter3 < 3)
+            {
+                if(iter2 == iter3)
+                {
+                    iter3++;
+                    continue;
+                }
+
+                xDelta = (meta[iter3].pos.x - meta[iter2].pos.x);
+                yDelta = (meta[iter3].pos.y - meta[iter2].pos.y);
+
+                int32_t i; // direction vector for x
+                int32_t j; // direction vector for y
+
+                float gravity = metaCalc(xDelta, yDelta)*1000; // *1000 makes gravity 1 when overlapping
+
+                if(gravity > GRAV_LIMIT)
+                    gravity = GRAV_LIMIT;
+
+                if(xDelta > 0)
+                    i = 1;
+                else
+                    i = -1;
+
+                if(yDelta > 0)
+                    j = 1;
+                else
+                    j = -1;
+
+                meta[iter2].pos.x += meta[iter2].v.x + i*gravity/2.0f; // calculate position
+                meta[iter2].v.x += i*gravity; // calc speed
+
+                meta[iter2].pos.y += meta[iter2].v.y + j*gravity/2.0f; // calculate position
+                meta[iter2].v.y += j*gravity; // calc speed
+
+                printf("\nX:%fY:%f v.x: %f, v.y: %f, i: %d, j: %d, xDelta: %d yDelta: %d Gravity: %f", meta[iter2].pos.x, meta[iter2].pos.y, meta[iter2].v.x, meta[iter2].v.y, i, j, xDelta, yDelta, gravity);
+
+                iter3++;
+            }
+
+            iter2++;
+        }
+}
+
 int main()
 {
     int8_t c;
 
-    double amplitude1;
-    double amplitude2;
-    double amplitudeSum;
+    float amplitude1;
+    float amplitude2;
+    float amplitude3;
+    float amplitudeSum;
 
     char file[32];
 
     uint32_t x;
     uint32_t y;
 
-    struct Meta meta[2];
+    struct Meta meta[3];
 
     meta[0].pos.x = 250;
     meta[0].pos.y = 200;
     meta[0].v.x = 0; 
     meta[0].v.y = 0; 
 
-    meta[1].pos.x = 400;
-    meta[1].pos.y = 300;
-    meta[0].v.x = 0; 
-    meta[0].v.y = 0; 
+    meta[1].pos.x = 300;
+    meta[1].pos.y = 250;
+    meta[1].v.x = 0; 
+    meta[1].v.y = 0; 
+
+    meta[2].pos.x = 350;
+    meta[2].pos.y = 225;
+    meta[2].v.x = 0; 
+    meta[2].v.y = 0; 
 
     uint32_t iter = 0;
 
@@ -112,14 +178,15 @@ int main()
 
                 amplitude1 = metaCalc(x-meta[0].pos.x,y-meta[0].pos.y); 
                 amplitude2 = metaCalc(x-meta[1].pos.x,y-meta[1].pos.y); 
+                amplitude3 = metaCalc(x-meta[2].pos.x,y-meta[2].pos.y); 
 
-                amplitudeSum = amplitude1 + amplitude2;             
+                amplitudeSum = amplitude1 + amplitude2 + amplitude3;             
 
-                color = (uint8_t)((double)0xFF*amplitudeSum*20000);
+                color = (uint8_t)((float)0xFF*amplitudeSum*20000);
     
                 if(amplitudeSum > 0.000052)
                 {
-                    setPixel(x,y,0x00,(uint8_t)((double)color*amplitude1*COLOR_INTENSITY),(uint8_t)((double)color*amplitude2*COLOR_INTENSITY),0xFF, buffer);
+                    setPixel(x,y,(uint8_t)((float)color*amplitude3*COLOR_INTENSITY),(uint8_t)((float)color*amplitude1*COLOR_INTENSITY),(uint8_t)((float)color*amplitude2*COLOR_INTENSITY),0xFF, buffer);
                 }
             }
         }
@@ -128,73 +195,8 @@ int main()
         printf("\nRendering frame %s", file);
         ret = stbi_write_png(file, WIDTH, HEIGHT, 4, &buffer, WIDTH*PIXELSIZE);
 
-        // vector calc
-        // P1P2 = (x2-x1)i + (y2-y1)j
-        
-        int32_t xDelta = (meta[1].pos.x - meta[0].pos.x);
-        int32_t yDelta = (meta[1].pos.y - meta[0].pos.y);
 
-        // TODO: Hack to fix behavior where both objects would shoot out to space when near each other..
-
-        int32_t i; // direction vector for x
-        int32_t j; // direction vector for y
-
-        double gravity;
-
-        xDelta = (meta[1].pos.x - meta[0].pos.x);
-        yDelta = (meta[1].pos.y - meta[0].pos.y);
-    
-
-        gravity = metaCalc(xDelta, yDelta)*1000; // *1000 makes gravity 1 when overlapping
-        if(gravity > 0.3)
-            gravity = 0.3;
-
-        if(xDelta > 0)
-            i = 1;
-        else
-            i = -1;
-
-        if(yDelta > 0)
-            j = 1;
-        else
-            j = -1;
-
-        meta[0].pos.x += meta[0].v.x + i*gravity/2.0f; // calculate position
-        meta[0].v.x += i*gravity; // calc speed
-
-        meta[0].pos.y += meta[0].v.y + j*gravity/2.0f; // calculate position
-        meta[0].v.y += j*gravity; // calc speed
-
-        printf("\nX:%fY:%f v.x: %f, v.y: %f, i: %d, j: %d, xDelta: %d yDelta: %d Gravity: %f", meta[0].pos.x, meta[0].pos.y, meta[0].v.x, meta[0].v.y, i, j, xDelta, yDelta, gravity);
-
-        xDelta = (meta[0].pos.x - meta[1].pos.x);
-        yDelta = (meta[0].pos.y - meta[1].pos.y);
-
-
-        gravity = metaCalc(xDelta, yDelta)*1000; // *1000 makes gravity 1 when overlapping
-        if(gravity > 0.3)
-            gravity = 0.3;
-
-        if(xDelta > 0)
-            i = 1;
-        else
-            i = -1;
-
-        if(yDelta > 0)
-            j = 1;
-        else
-            j = -1;
-
-//position = position + velocity * timestep + acceleration/2.0f * timestep
-//velocity = velocity + acceleration * timestep
-
-        meta[1].pos.x += meta[1].v.x + i*gravity/2.0f; // calculate position
-        meta[1].v.x += i*gravity; // calc speed
-
-        meta[1].pos.y += meta[1].v.y + j*gravity/2.0f; // calculate position
-        meta[1].v.y += j*gravity; // calc speed
-
-        printf("\nX:%fY:%f v.x: %f, v.y: %f, i: %d, j: %d, Delta: %d yDelta: %d Gravity: %f", meta[1].pos.x, meta[1].pos.y, meta[1].v.x, meta[1].v.y, i, j, xDelta, yDelta, gravity);
+        updateForces(meta);
 
         iter++;
     }
